@@ -1,8 +1,23 @@
+using API;
 using API.Services.Concretes;
 using API.Services.Interfaces;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var keyVaultURI = new Uri(
+    $"https://{builder.Configuration["KeyVaultName"]}.vault.azure.net/"
+);
+
+builder.Configuration.AddAzureKeyVault(
+    keyVaultURI,
+    new DefaultAzureCredential(),
+    new CustomSecretManager("didacticapi")
+);
+
+Console.WriteLine(builder.Configuration["Secrets:AssistantInformation:Id"]);
 
 builder.Services.AddCors(options =>
             {
