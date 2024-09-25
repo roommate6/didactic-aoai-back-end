@@ -1,8 +1,11 @@
+using System.Text;
 using API.DTOs.Request.AI;
 using API.DTOs.Response.AI;
 using API.Services.Interfaces;
 using Azure.AI.OpenAI.Assistants;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Devices;
+using Newtonsoft.Json;
 
 namespace API.Controllers
 {
@@ -17,6 +20,19 @@ namespace API.Controllers
         {
             _assistantsClient = assistantsClient;
             _secrets = secrets;
+        }
+
+        [HttpPost("assistant/toggle/{message}")]
+        public async Task<ActionResult<string>>
+            Test([FromRoute] string message)
+        {
+            var serviceClient = ServiceClient.CreateFromConnectionString("HostName=hubiotmqtt.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=sBcNEnwkyBBEMLTZNf3XDSCJNxNMaKCbYAIoTHnd0q0=");
+            var serializedMessage = JsonConvert.SerializeObject(message);
+
+            var iotMessage = new Message(Encoding.UTF8.GetBytes(serializedMessage));
+            await serviceClient.SendAsync("myesp12fyehaj", iotMessage);
+
+            return Ok("sent");
         }
 
         [HttpPost("assistant/post-message")]
@@ -78,6 +94,12 @@ namespace API.Controllers
                     break;
                 }
             }
+
+            var serviceClient = ServiceClient.CreateFromConnectionString("HostName=hubiotmqtt.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=sBcNEnwkyBBEMLTZNf3XDSCJNxNMaKCbYAIoTHnd0q0=");
+            var serializedMessage = JsonConvert.SerializeObject(responseText.ToLower());
+
+            var iotMessage = new Message(Encoding.UTF8.GetBytes(serializedMessage));
+            await serviceClient.SendAsync("myesp12fyehaj", iotMessage);
 
             response =
                 new() { ResponseText = responseText };
