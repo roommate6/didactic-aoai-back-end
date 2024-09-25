@@ -15,22 +15,24 @@ namespace API.Controllers
     {
         private readonly IAssistantsClient _assistantsClient;
         private readonly ISecrets _secrets;
+        private readonly IAppConfiguration _appConfiguration;
 
-        public AIController(IAssistantsClient assistantsClient, ISecrets secrets)
+        public AIController(IAssistantsClient assistantsClient, ISecrets secrets, IAppConfiguration appConfiguration)
         {
             _assistantsClient = assistantsClient;
             _secrets = secrets;
+            _appConfiguration = appConfiguration;
         }
 
         [HttpPost("assistant/toggle/{message}")]
         public async Task<ActionResult<string>>
             Test([FromRoute] string message)
         {
-            var serviceClient = ServiceClient.CreateFromConnectionString("HostName=hubiotmqtt.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=sBcNEnwkyBBEMLTZNf3XDSCJNxNMaKCbYAIoTHnd0q0=");
+            var serviceClient = ServiceClient.CreateFromConnectionString(_secrets.ConnectionStrings.IoTHub);
             var serializedMessage = JsonConvert.SerializeObject(message);
 
             var iotMessage = new Message(Encoding.UTF8.GetBytes(serializedMessage));
-            await serviceClient.SendAsync("myesp12fyehaj", iotMessage);
+            await serviceClient.SendAsync(_appConfiguration.IoTDeviceName, iotMessage);
 
             return Ok("sent");
         }
@@ -95,11 +97,11 @@ namespace API.Controllers
                 }
             }
 
-            var serviceClient = ServiceClient.CreateFromConnectionString("HostName=hubiotmqtt.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=sBcNEnwkyBBEMLTZNf3XDSCJNxNMaKCbYAIoTHnd0q0=");
+            var serviceClient = ServiceClient.CreateFromConnectionString(_secrets.ConnectionStrings.IoTHub);
             var serializedMessage = JsonConvert.SerializeObject(responseText.ToLower());
 
             var iotMessage = new Message(Encoding.UTF8.GetBytes(serializedMessage));
-            await serviceClient.SendAsync("myesp12fyehaj", iotMessage);
+            await serviceClient.SendAsync(_appConfiguration.IoTDeviceName, iotMessage);
 
             response =
                 new() { ResponseText = responseText };

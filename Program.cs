@@ -17,8 +17,6 @@ builder.Configuration.AddAzureKeyVault(
     new CustomSecretManager("didacticapi")
 );
 
-Console.WriteLine(builder.Configuration["Secrets:AssistantInformation:Id"]);
-
 builder.Services.AddCors(options =>
             {
                 options.AddPolicy(name: "CORS",
@@ -32,9 +30,12 @@ builder.Services.AddCors(options =>
             });
 
 builder.Services.Configure<Secrets>(builder.Configuration.GetSection("Secrets"));
+builder.Services.Configure<AppConfiguration>(builder.Configuration.GetSection("AppConfiguration"));
 
 builder.Services.AddSingleton<ISecrets>(provider =>
     provider.GetRequiredService<IOptions<Secrets>>().Value);
+builder.Services.AddSingleton<IAppConfiguration>(provider =>
+    provider.GetRequiredService<IOptions<AppConfiguration>>().Value);
 
 builder.Services.AddSingleton<IAssistantsClient, AssistantsClient>();
 

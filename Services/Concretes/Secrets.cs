@@ -6,5 +6,6 @@ namespace API.Services.Concretes
     public class Secrets : ISecrets
     {
         public AssistantInformation AssistantInformation { get; set; }
+        public ConnectionStrings ConnectionStrings { get; set; }
     }
 }
